@@ -1,3 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package securityproject;
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -15,12 +21,13 @@ import java.security.PublicKey;
 import java.util.Random;
 import org.bouncycastle.jce.interfaces.ElGamalPrivateKey;
 
+
 public class ElGammalDS {
    static Random random = new SecureRandom();
    static int mStreangth = 64;
    static int plength;
    public static BigInteger TWO = new BigInteger("2");
-
+   public static int  lengthS,lengthr;
 
 
     public static byte[] signMessage(byte[] message,PrivateKey key) throws NoSuchAlgorithmException 
@@ -34,7 +41,7 @@ public class ElGammalDS {
         boolean isCorrect_s = false;
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] hash = sha256.digest(message);
-        BigInteger hashm = new BigInteger(1,hash);
+        BigInteger hashm = new BigInteger(hash);
         while(!isCorrect_s)
         { BigInteger PminusOne = P.subtract(BigInteger.ONE);
         do
@@ -49,22 +56,23 @@ public class ElGammalDS {
        
         
         BigInteger top = hashm.subtract(Xm.multiply(r)).mod(PminusOne);
-        s = top.multiply(k.modPow(BigInteger.ONE, PminusOne)).mod(PminusOne);
+        s = top.multiply(k.modPow(BigInteger.ONE.negate(), PminusOne)).mod(PminusOne);
          if((s.equals(BigInteger.ZERO))){
                 isCorrect_s = false;
             }
          else isCorrect_s=true;
         }
         
-        int modulusLength = (plength +7)/8;
-        byte [] signature =new byte [(modulusLength*2) + message.length ];
-        byte [] rbytes = getBytes(r);
-        int rlength= rbytes.length;
-        byte [] sbytes = getBytes(s);
-        int slength = sbytes.length;
-        System.arraycopy(rbytes, 0, signature, modulusLength - rlength, rlength);
-        System.arraycopy(sbytes, 0, signature, modulusLength *2 - slength , slength);
-        System.arraycopy(message, 0, signature, modulusLength *2 , message.length);
+        //int modulusLength = (plength +7)/8;
+        
+        byte [] rbytes = r.toByteArray();
+        lengthr= rbytes.length;
+        byte [] sbytes =s.toByteArray();
+        lengthS= sbytes.length;
+        byte [] signature =new byte [lengthr+ lengthS+ message.length ];
+        System.arraycopy(rbytes, 0, signature, 0, lengthr);
+        System.arraycopy(sbytes, 0, signature,lengthr , lengthS);
+        System.arraycopy(message, 0, signature, lengthr+ lengthS , message.length);
         return  signature;
         
         
@@ -95,20 +103,20 @@ public class ElGammalDS {
         BigInteger P = gkey.getParameters().getP();
         BigInteger G = gkey.getParameters().getG();
         
-        int modulusLength = (plength +7)/8;
-        byte[] rbytes = new byte [modulusLength];
-        byte[] sbytes = new byte [modulusLength];
-        byte[] mbytes = new byte [message.length - (2*modulusLength)];
-        System.arraycopy(message, 0, rbytes, 0, modulusLength);
-        System.arraycopy(message, modulusLength, sbytes, 0, modulusLength);
-        System.arraycopy(message, 2*modulusLength, mbytes, 0, (message.length - (2*modulusLength)));
-        BigInteger r = new BigInteger(1,rbytes);
-        BigInteger s = new BigInteger(1,sbytes);
+        //int modulusLength = (plength +7)/8;
+        byte[] rbytes = new byte [lengthr];
+        byte[] sbytes = new byte [lengthS];
+        byte[] mbytes = new byte [message.length - (lengthS+lengthr)];
+        System.arraycopy(message, 0, rbytes, 0, lengthr);
+        System.arraycopy(message, lengthr, sbytes, 0, lengthS);
+        System.arraycopy(message, (lengthS+lengthr), mbytes, 0, (message.length - (lengthS+lengthr)));
+        BigInteger r = new BigInteger(rbytes);
+        BigInteger s = new BigInteger(sbytes);
         
         
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
         byte[] hash = sha256.digest(mbytes);
-        BigInteger hashm = new BigInteger(1,hash);
+        BigInteger hashm = new BigInteger(hash);
         
         BigInteger yrrs =  Y.modPow(r, P).multiply(r.modPow(s, P)).mod(P);
         BigInteger ghm = G.modPow(hashm, P);
@@ -125,9 +133,9 @@ public class ElGammalDS {
     //Returns the message part without the signature
     public static String getMessagePart(byte[]message)
     {
-        int modulusLength = (plength +7)/8;
-        byte[] mbytes  = new byte [message.length - (2*modulusLength)];
-        System.arraycopy(message, 2*modulusLength, mbytes, 0, (message.length - (2*modulusLength)));
+        //int modulusLength = (plength +7)/8;
+        byte[] mbytes  = new byte [message.length - (lengthS+lengthr)];
+        System.arraycopy(message,(lengthS+lengthr), mbytes, 0, message.length - (lengthS+lengthr));
         
         return new String(mbytes);
     }
@@ -189,6 +197,39 @@ public class ElGammalDS {
            return smallerbytes;
        }
     }
+    
+    
+    
+     public static void main(String[] args)
+    {
+        try {
 
 
+            KeyPair kp = generateElGamalKeyPair();
+            PublicKey pk = kp.getPublic();
+            PrivateKey prk = kp.getPrivate();
+
+            String message = "I am very sad";
+            byte[] result;
+            result=signMessage(message.getBytes(),prk);
+            boolean ver = verifyMessageSignature(result,pk);
+            String restored = getMessagePart(result);
+//            long p=System.currentTimeMillis();
+//            g,x;
+//            ElGamalParameterSpec spec = new ElGamalParameterSpec(p,g);
+//
+//            ElGamalPublicKey key;
+
+
+            System.out.println(restored);
+            System.out.println(ver);
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+  
 }
