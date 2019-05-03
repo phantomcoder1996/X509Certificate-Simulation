@@ -1,3 +1,5 @@
+import org.bouncycastle.jce.interfaces.ElGamalPublicKey;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -35,11 +37,15 @@ public class Receiver extends Client{
             objStream.writeObject(CSR);
 
             //TODO: Create CSR for ELGamalCertificate as well and Uncomment (Reem Gody)
-//            CSR = new Request(Bob.subjectName,Bob.ElGamalPair.getPublic(),"ElGamal");
-//            System.out.printf("Bob creates CSR for his ElGamal public key\n");
-//            System.out.printf("Bob public key = ");
-//            System.out.println(Bob.ElGamalPair.getPublic());
-//            objStream.writeObject(CSR);
+
+            System.out.println(((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getY());
+            System.out.println(((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getParams().getP());
+            System.out.println(((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getParams().getG());
+            ElGamalRequest CSR2 = new ElGamalRequest(Bob.subjectName,((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getY(),((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getParams().getG(),((ElGamalPublicKey)Bob.ElGamalPair.getPublic()).getParams().getP(),"ElGamal");
+            System.out.printf("Bob creates CSR for his ElGamal public key\n");
+            System.out.printf("Bob public key = ");
+            System.out.println(Bob.ElGamalPair.getPublic());
+            objStream.writeObject(CSR2);
 
 
             objStream.close();
@@ -59,42 +65,44 @@ public class Receiver extends Client{
             {
                 message[i]=tempMessage[i];
             }
-            String decrypted = RSAEncryption.decrypt(message,Bob.RSApair.getPrivate());
+            byte[] decrypted = RSAEncryption.decrypt(message,Bob.RSApair.getPrivate());
             System.out.printf("Bob received a message\n");
-            System.out.printf("Decrypted message = %s",decrypted);
+            System.out.printf("Decrypted message = %s\n",decrypted);
 
             //TODO: uncomment this when Reem finishes (Reem Gody)
-//            //First : Get Alice's public key certificate for elGamal signature
-//            X509Certificate AliceElGamalCert = Bob.findCertificate("Alice","ElGamal");
-//            //Second : validate the certificate
-//            if(!Bob.validateCertificate(AliceElGamalCert))
-//            {
-//                System.out.printf("Certificate is not valid\n");
-//            }
-//            else if(!Bob.verifyCertificate(AliceElGamalCert))
-//            {
-//                System.out.printf("Certificate is not verified\n");
-//                //If valid in terms of date, verify it's from certificate authority (Not fake)
-//            }
-//            else { //Certificate is valid and verified
-//                System.out.printf("Certificate is valid and verified\n");
-//                //use Alice ElGamal publicKey to verify the signature
-//                boolean verified =ElGammalDS.verifyMessageSignature(decrypted.getBytes(),AliceElGamalCert.getPublicKey());
-//
-//                if(verified) //correct signature
-//                {
-//                    System.out.println("Correct Signature\n");
-//
-//                    //Get Message
-//                    String msg = ElGammalDS.getMessagePart(decrypted.getBytes());
-//
-//                }
-//                else
-//                {
-//                    System.out.println("Incorrect Signature\n");
-//                }
-//
-//            }
+            //First : Get Alice's public key certificate for elGamal signature
+            X509Certificate AliceElGamalCert = Bob.findCertificate("Alice","ElGamal");
+            //Second : validate the certificate
+            if(!Bob.validateCertificate(AliceElGamalCert))
+            {
+                System.out.printf("Certificate is not valid\n");
+            }
+            else if(!Bob.verifyCertificate(AliceElGamalCert))
+            {
+                System.out.printf("Certificate is not verified\n");
+                //If valid in terms of date, verify it's from certificate authority (Not fake)
+            }
+            else { //Certificate is valid and verified
+                System.out.printf("Certificate is valid and verified\n");
+                //use Alice ElGamal publicKey to verify the signature
+              
+                boolean verified =ElGammalDS.verifyMessageSignature(decrypted,AliceElGamalCert.getPublicKey());
+
+                if(verified) //correct signature
+                {
+                    System.out.println("Correct Signature\n");
+
+                    //Get Message
+                    String msg = ElGammalDS.getMessagePart(decrypted);
+                    System.out.printf("Restored message: %s\n",msg);
+
+                }
+                else
+                {
+                    System.out.println("Incorrect Signature\n");
+                }
+
+            }
 
             //End of communication
             socket.close();

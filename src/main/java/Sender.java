@@ -1,3 +1,5 @@
+import org.bouncycastle.jce.interfaces.ElGamalPublicKey;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -8,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 
@@ -18,19 +21,21 @@ public class Sender extends Client{
         super(name);
     }
 
-    byte[] createMessage(String content, PublicKey key)
+    byte[] createMessage(String content, PublicKey key, PrivateKey k)
     {
 
         //TODO:Sign the message using ELGamal Algorithm (Uncomment when Reem finishes)
 
-       // byte[] signed = ElGammalDS.signMessage(content.getBytes(),ElGamalPair.getPrivate());
 
-        byte[] signed = content.getBytes();
+        try {
+            byte[] signed = ElGammalDS.signMessage(content.getBytes(),k);
+
+
+        //byte[] signed = content.getBytes();
 
 
         //Encrypt the message using RSA
 
-        try {
             byte[] encrypted = RSAEncryption.encrypt(signed,key);
 
             return encrypted;
@@ -47,7 +52,7 @@ public class Sender extends Client{
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-return null; //if any error has occured
+        return null; //if any error has occured
 
     }
 
@@ -73,11 +78,11 @@ return null; //if any error has occured
             ObjectOutputStream objStream = new ObjectOutputStream(socket.getOutputStream());
             objStream.writeObject(CSR);
             //TODO: Create CSR for ELGamalCertificate as well and uncomment(Reem Gody)
-//            CSR = new Request(Alice.subjectName,Alice.ElGamalPair.getPublic(),"ElGamal");
-//            System.out.printf("Alice creates CSR for her ElGamal public key\n");
-//            System.out.printf("Alice public key = ");
-//            System.out.println(Alice.ElGamalPair.getPublic());
-//            objStream.writeObject(CSR);
+            ElGamalRequest CSR2 = new ElGamalRequest(Alice.subjectName,((ElGamalPublicKey)Alice.ElGamalPair.getPublic()).getY(),((ElGamalPublicKey)Alice.ElGamalPair.getPublic()).getParams().getG(),((ElGamalPublicKey)Alice.ElGamalPair.getPublic()).getParams().getP(),"ElGamal");
+            System.out.printf("Alice creates CSR for her ElGamal public key\n");
+            System.out.printf("Alice public key = ");
+            System.out.println(Alice.ElGamalPair.getPublic());
+            objStream.writeObject(CSR2);
 
 
             objStream.close();
@@ -102,9 +107,9 @@ return null; //if any error has occured
                 System.out.printf("Certificate is valid and verified\n");
 
                 socket = new Socket("localhost", 9899);
-                String message = "Hello there Bob!!!";
+                String message = "I want to graduate.......please :'(.";
                 System.out.printf("Alice sends a message to Bob: %s", message);
-                byte[] encrypted = Alice.createMessage(message, BobRSACert.getPublicKey());
+                byte[] encrypted = Alice.createMessage(message, BobRSACert.getPublicKey(),Alice.ElGamalPair.getPrivate());
 
                 OutputStream socketOutputStream = socket.getOutputStream();
                 socketOutputStream.write(encrypted);

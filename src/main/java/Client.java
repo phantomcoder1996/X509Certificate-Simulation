@@ -1,3 +1,5 @@
+import org.bouncycastle.jce.interfaces.ElGamalPublicKey;
+
 import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +29,12 @@ public class Client {
         }
 
         //TODO: Generate ElGamalKeyPair as well and uncomment (Reem Gody)
-        //ElGamalPair = ElGammalDS.generateElGamalKeyPair();
+        ElGamalPair = ElGammalDS.generateElGamalKeyPair();
+
+        System.out.println("Elgamal publick key");
+        System.out.println(((ElGamalPublicKey)ElGamalPair.getPublic()).getY());
+        System.out.println(((ElGamalPublicKey)ElGamalPair.getPublic()).getParams().getP());
+        System.out.println(((ElGamalPublicKey)ElGamalPair.getPublic()).getParams().getG());
     }
 
 

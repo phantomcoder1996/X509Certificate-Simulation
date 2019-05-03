@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package securityproject;
+
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -27,7 +27,7 @@ public class ElGammalDS {
    static int mStreangth = 300;
    static int plength;
    public static BigInteger TWO = new BigInteger("2");
-   public static int  lengthS,lengthr;
+   public static int  lengthS=38,lengthr=38;
 
 
     public static byte[] signMessage(byte[] message,PrivateKey key) throws NoSuchAlgorithmException 
@@ -159,8 +159,19 @@ public class ElGammalDS {
         GamalPublicKey gpk= new GamalPublicKey(pbls);
         GamalPrivateKey gp = new GamalPrivateKey(prs);
 
+
+
         return new KeyPair(gpk,gp);
 
+    }
+
+    public static GamalPublicKey wrapKey(BigInteger Y , BigInteger G, BigInteger P)
+    {
+        ElGamalParameterSpec spec = new ElGamalParameterSpec(P,G);
+
+        ElGamalPublicKeySpec pbls = new ElGamalPublicKeySpec(Y,spec);
+        GamalPublicKey gpk= new GamalPublicKey(pbls);
+        return gpk;
     }
 
     private static BigInteger generatePublickey(BigInteger p, BigInteger g, BigInteger xa) {
@@ -205,20 +216,22 @@ public class ElGammalDS {
         try {
 
 
+
             KeyPair kp = generateElGamalKeyPair();
             PublicKey pk = kp.getPublic();
             PrivateKey prk = kp.getPrivate();
 
-            String message = "I am very sad";
+            System.out.println(plength);
+
+            String message = "R";
             byte[] result;
             result=signMessage(message.getBytes(),prk);
-            boolean ver = verifyMessageSignature(result,pk);
-            String restored = getMessagePart(result);
-//            long p=System.currentTimeMillis();
-//            g,x;
-//            ElGamalParameterSpec spec = new ElGamalParameterSpec(p,g);
-//
-//            ElGamalPublicKey key;
+            KeyPair rsa = RSAEncryption.generateRSAKeyPair();
+            byte[] Encrypted  = RSAEncryption.encrypt(result,rsa.getPublic());
+            byte[] decrypted = RSAEncryption.decrypt(Encrypted,rsa.getPrivate());
+
+            boolean ver = verifyMessageSignature(decrypted,pk);
+            String restored = getMessagePart(decrypted);
 
 
             System.out.println(restored);

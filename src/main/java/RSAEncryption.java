@@ -32,7 +32,7 @@ public class RSAEncryption {
 
     }
 
-    public static String decrypt(byte[] text,PrivateKey key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {
+    public static byte[] decrypt(byte[] text,PrivateKey key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException, UnsupportedEncodingException {
         byte[] plainText = null;
         //
         // get an RSA cipher object and print the provider
@@ -42,7 +42,7 @@ public class RSAEncryption {
         cipher.init(Cipher.DECRYPT_MODE, key);
 
         plainText = cipher.doFinal(text);
-        return new String(plainText,"UTF8");
+        return plainText;
     }
 
 
@@ -69,7 +69,7 @@ public class RSAEncryption {
             String message = "I am very sad";
             byte[] result;
             result=encrypt(message.getBytes(),pk);
-            String restored = decrypt(result,prk);
+            byte[] restored = decrypt(result,prk);
 //            long p=System.currentTimeMillis();
 //            g,x;
 //            ElGamalParameterSpec spec = new ElGamalParameterSpec(p,g);
@@ -77,7 +77,7 @@ public class RSAEncryption {
 //            ElGamalPublicKey key;
 
 
-            System.out.print(result);
+            System.out.print(new String(result));
 
 
 

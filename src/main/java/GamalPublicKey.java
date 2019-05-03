@@ -16,7 +16,7 @@ public class GamalPublicKey implements ElGamalPublicKey {
     static final long serialVersionUID = 8712728417091216948L;
 
     private BigInteger y;
-    private transient ElGamalParameterSpec elSpec;
+    private ElGamalParameterSpec elSpec;
 
     GamalPublicKey(ElGamalPublicKeySpec spec) {
         this.y = spec.getY();

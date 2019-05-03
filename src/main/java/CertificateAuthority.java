@@ -1,3 +1,4 @@
+import org.bouncycastle.jce.interfaces.ElGamalPublicKey;
 import org.bouncycastle.x509.X509V1CertificateGenerator;
 
 import javax.security.auth.x500.X500Principal;
@@ -172,17 +173,21 @@ public class CertificateAuthority {
     {
         try {
             ObjectOutputStream objStream = new ObjectOutputStream(new FileOutputStream(RSACertificatesFileName));
-
+            ObjectOutputStream objStream2 = new ObjectOutputStream(new FileOutputStream(ElGamalCertificatesFileName));
             //First write number of certificates
            // objStream.writeObject(new Integer(50));
 
-            for(int i =0 ;i<2;i++)
+            for(int i =0 ;i<10;i++)
             {
                 String subjectDN = "sub"+(new Random().nextInt());
                 try {
                     KeyPair pair = RSAEncryption.generateRSAKeyPair();
                     X509Certificate certificate = CertificateAuthority.generateV1Certificate(pair.getPublic(),subjectDN);
                     objStream.writeObject(new Certificate(certificate));
+
+                    KeyPair pair2 = ElGammalDS.generateElGamalKeyPair();
+                    X509Certificate certificate2 = CertificateAuthority.generateV1Certificate(pair2.getPublic(),subjectDN);
+                    objStream2.writeObject(new Certificate(certificate2));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -311,19 +316,23 @@ public class CertificateAuthority {
 
                 //TODO : (REEM Gody) Uncomment this when Reem finishes
 
-//                CSR = (Request)objIstream.readObject();
-//                System.out.printf("%s requested a certificate for ElGamal public key \n",CSR.subjectName);
-//                System.out.printf("Public key of %s = ",CSR.subjectName);
-//                System.out.println(CSR.key);
-//
-//
-//                //Creating certificate and storing it in database
-//                System.out.printf("Generating a certificate for %s\n",CSR.subjectName);
-//                certificate = generateV1Certificate(CSR.key,CSR.subjectName);
-//
-//                //storing it in database
-//                System.out.printf("Saving certificate for %s\n",CSR.subjectName);
-//                saveCertificate(certificate,CSR.type);
+                ElGamalRequest CSR2 = (ElGamalRequest)objIstream.readObject();
+                System.out.printf("%s requested a certificate for ElGamal public key \n",CSR2.subjectName);
+                System.out.printf("Public key of %s = ",CSR2.subjectName);
+
+                System.out.println(CSR2.Y);
+                System.out.println(CSR2.G);
+                System.out.println(CSR2.P);
+
+                GamalPublicKey gkey = ElGammalDS.wrapKey(CSR2.Y,CSR2.G,CSR2.P);
+
+                //Creating certificate and storing it in database
+                System.out.printf("Generating a certificate for %s\n",CSR2.subjectName);
+                certificate = generateV1Certificate(gkey,CSR2.subjectName);
+
+                //storing it in database
+                System.out.printf("Saving certificate for %s\n",CSR2.subjectName);
+                saveCertificate(certificate,CSR2.type);
 
 
 
