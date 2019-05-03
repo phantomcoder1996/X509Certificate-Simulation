@@ -24,7 +24,7 @@ import org.bouncycastle.jce.interfaces.ElGamalPrivateKey;
 
 public class ElGammalDS {
    static Random random = new SecureRandom();
-   static int mStreangth = 64;
+   static int mStreangth = 300;
    static int plength;
    public static BigInteger TWO = new BigInteger("2");
    public static int  lengthS,lengthr;
